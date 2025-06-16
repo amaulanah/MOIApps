@@ -56,13 +56,24 @@ class UserController extends Controller
         return $user->load('level');
     }
 
-    /**
-     * Update the specified resource in storage.
-     * --- INI FUNGSI YANG HILANG DAN PERLU DITAMBAHKAN ---
-     */
+    // backend/app/Http/Controllers/Api/UserController.php
+
     public function update(Request $request, User $user)
     {
-        dd($request->all());
+        // --- PERUBAHAN DIMULAI DI SINI ---
+
+        // 1. Kita konversi nilai string 'true'/'false' dari form menjadi boolean asli
+        //    sebelum data tersebut divalidasi.
+        $request->merge([
+            'delete_photo' => filter_var($request->input('delete_photo'), FILTER_VALIDATE_BOOLEAN),
+        ]);
+
+        // 2. JANGAN LUPA HAPUS BARIS dd() DARI SINI
+        // dd($request->all()); 
+
+        // --- AKHIR PERUBAHAN ---
+
+
         $validatedData = $request->validate([
             'nomor_induk_karyawan' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
             'nama_karyawan' => 'required|string|max:100',
@@ -71,12 +82,14 @@ class UserController extends Controller
             'status_karyawan' => 'required|string|in:aktif,tidak aktif',
             'joint_date' => 'required|date',
             'password' => ['nullable', 'confirmed', PasswordRules\Password::defaults()],
+            
+            // Aturan validasi ini sekarang akan bekerja dengan benar
             'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'delete_photo' => 'nullable|boolean',
         ]);
 
-        // Update data teks
-        $user->fill($request->except(['password', 'photo', 'delete_photo']));
+        // Baris ini sekarang lebih aman karena menggunakan data yang sudah tervalidasi
+        $user->fill($validatedData);
 
         // Update password jika diisi
         if (!empty($validatedData['password'])) {
@@ -84,16 +97,15 @@ class UserController extends Controller
         }
 
         // Logika untuk menghapus foto jika dicentang
-        if ($request->input('delete_photo') == 'true' || $request->input('delete_photo') == 1) {
+        if ($validatedData['delete_photo'] ?? false) {
             if ($user->profile_photo_path) {
                 Storage::disk('public')->delete($user->profile_photo_path);
                 $user->profile_photo_path = null;
             }
         }
 
-        // Logika untuk upload foto baru (akan menimpa foto lama jika ada)
+        // Logika untuk upload foto baru
         if ($request->hasFile('photo')) {
-            // Hapus foto lama sebelum upload yang baru
             if ($user->profile_photo_path) {
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
