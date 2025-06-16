@@ -1,0 +1,42 @@
+/* Aturan dasar untuk membuat layout mengisi seluruh layar */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  /* Hapus background-color agar tidak bentrok dengan AdminLTE */
+  background-color: #f4f6f9; /* Warna background default AdminLTE */
+}
+
+/* Pastikan wrapper di dalam root juga mengisi 100% tinggi. */
+#root > .wrapper {
+  height: 100%;
+}
+
+/* Tweak kecil untuk posisi form login (opsional tapi bagus) */
+.login-box, .register-box {
+  margin-top: -5rem;
+}
+
+/* FIX UNTUK MODAL Z-INDEX */
+/* Pastikan modal selalu di lapisan paling atas */
+.modal {
+  z-index: 1050 !important;
+}
+
+/* Pastikan backdrop berada di belakang modal */
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+.momentum-logo{
+  /* Timpa max-height default (33px) dari AdminLTE */
+  height: 75px !important; 
+  width: 150px !important; /* Atur juga width agar proporsional jika logo Anda bulat */
+  
+  /* Hapus max-height agar tidak membatasi */
+  max-height: none !important; 
+}
+
+body.sidebar-collapse .brand-link {
+  display: none !important;
+}
