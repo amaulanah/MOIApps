@@ -85,45 +85,40 @@ export default function UserManagementTab() {
     return ' ▼';
   };
   
-  // --- UBAH FUNGSI handleSave DI SINI ---
   const handleSave = async (data, userId) => {
-    confirm({
-      title: 'Konfirmasi Penyimpanan',
-      message: `Anda yakin ingin menyimpan data user ini?`,
-      onConfirm: async () => {
-        const isEditing = !!userId;
-        const url = isEditing ? `/users/${userId}` : '/users';
+  confirm({
+    title: 'Konfirmasi Penyimpanan',
+    message: `Anda yakin ingin menyimpan data user ini?`,
+    onConfirm: async () => {
+      const isEditing = !!userId;
+      const url = isEditing ? `/users/${userId}` : '/users';
+      const method = 'post'; // <-- Metode SELALU 'post'
+
+      try {
+        await axiosClient[method](url, data, {
+          headers: isEditing ? { 'Content-Type': 'multipart/form-data' } : {}
+        });
         
-        // Metode SELALU 'post'. UserModal yang akan menambahkan _method: 'PUT'
-        const method = 'post'; 
-
-        try {
-          await axiosClient[method](url, data, {
-            // Header ini penting HANYA saat edit (mengirim FormData)
-            headers: isEditing ? { 'Content-Type': 'multipart/form-data' } : {}
-          });
-          
-          Swal.fire('Sukses', `User berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}.`, 'success');
-          handleCloseModal();
-          fetchData(); // Muat ulang data
-        } catch (error) {
-          const message = error.response?.data?.message || 'Terjadi kesalahan.';
-          const errors = error.response?.data?.errors;
-          let htmlMessage = message;
-
-          if (errors) {
-            htmlMessage += '<ul class="text-left mt-2">';
-            for (const key in errors) {
-              htmlMessage += `<li>${errors[key][0]}</li>`;
-            }
-            htmlMessage += '</ul>';
+        Swal.fire('Sukses', `User berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}.`, 'success');
+        handleCloseModal();
+        fetchData();
+      } catch (error) {
+        // ... (logika error handling) ...
+        const message = error.response?.data?.message || 'Terjadi kesalahan.';
+        const errors = error.response?.data?.errors;
+        let htmlMessage = message;
+        if (errors) {
+          htmlMessage += '<ul class="text-left mt-2">';
+          for (const key in errors) {
+            htmlMessage += `<li>${errors[key][0]}</li>`;
           }
-          
-          Swal.fire({ icon: 'error', title: 'Error', html: htmlMessage, });
+          htmlMessage += '</ul>';
         }
+        Swal.fire({ icon: 'error', title: 'Error', html: htmlMessage });
       }
-    });
-  };
+    }
+  });
+};
 
   const handleOpenModal = (user = null) => { setEditingUser(user); setIsModalOpen(true); };
   const handleCloseModal = () => { setIsModalOpen(false); setEditingUser(null); };
