@@ -62,6 +62,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        dd($request->all());
         $validatedData = $request->validate([
             'nomor_induk_karyawan' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
             'nama_karyawan' => 'required|string|max:100',

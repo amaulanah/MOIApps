@@ -1,29 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 
 export default function UserModal({ user, userLevels, onClose, onSave }) {
-  // --- STATE MANAGEMENT ---
   const [formData, setFormData] = useState({
     nama_karyawan: '',
     nomor_induk_karyawan: '',
     username: '',
     password: '',
-    password_confirmation: '', // <-- TAMBAHAN: Untuk konfirmasi password
+    password_confirmation: '',
     level_id: '',
     status_karyawan: 'aktif',
-    joint_date: '', // <-- TAMBAHAN: Untuk tanggal bergabung
-    delete_photo: false, // <-- TAMBAHAN: Untuk opsi hapus foto
+    joint_date: '',
+    delete_photo: false,
   });
   
-  // State baru untuk menangani file foto
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
   const fileInputRef = useRef(null);
 
-  // --- EFEK & LOGIKA ---
-
-  // Mengisi form dengan data user saat komponen dimuat atau prop berubah
   useEffect(() => {
-    // Mode EDIT: jika ada prop 'user'
     if (user) {
       setFormData({
         nama_karyawan: user.nama_karyawan || '',
@@ -33,14 +27,11 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
         password_confirmation: '',
         level_id: user.level_id || '',
         status_karyawan: user.status_karyawan || 'aktif',
-        joint_date: user.joint_date || '', // <-- TAMBAHAN: Isi joint_date
+        joint_date: user.joint_date || '',
         delete_photo: false,
       });
-      // Atur pratinjau foto profil
-      setPhotoPreview(user.profile_photo_url || '');
-    } 
-    // Mode ADD: jika tidak ada prop 'user'
-    else {
+      setPhotoPreview(user.profile_photo_url || null); // Gunakan null jika kosong
+    } else {
       setFormData({
         nama_karyawan: '',
         nomor_induk_karyawan: '',
@@ -49,21 +40,19 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
         password_confirmation: '',
         level_id: userLevels.length > 0 ? userLevels[0].id : '',
         status_karyawan: 'aktif',
-        joint_date: '', // <-- TAMBAHAN: Reset joint_date
+        joint_date: '',
         delete_photo: false,
       });
-      setPhotoPreview(''); // Tidak ada foto saat menambah user baru
+      setPhotoPreview(null);
       setPhoto(null);
     }
   }, [user, userLevels]);
 
-  // Handler untuk input teks, select, dan checkbox
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  // Handler khusus untuk input file foto
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -72,30 +61,32 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
     }
   };
 
-  // Handler saat form disubmit
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Untuk mode EDIT, kita harus mengirim FormData karena ada file
     if (user) {
       const payload = new FormData();
       
-      // Tambahkan semua data dari state ke payload
       Object.keys(formData).forEach(key => {
         payload.append(key, formData[key]);
       });
 
-      // Tambahkan file foto jika dipilih oleh user
       if (photo) {
         payload.append('photo', photo);
       }
       
-      // Kirim payload FormData dan ID user ke parent component
+      // --- TAMBAHKAN BARIS KRUSIAL INI ---
+      payload.append('_method', 'PUT');
+      // ------------------------------------
+      
+      // Untuk Debugging (opsional): Cek isi payload sebelum dikirim
+      // for (let pair of payload.entries()) {
+      //    console.log(pair[0]+ ', ' + pair[1]); 
+      // }
+
       onSave(payload, user.id);
     } 
-    // Untuk mode ADD, kita cukup kirim objek JSON biasa
     else {
-      // Pastikan konfirmasi password sama
       if (formData.password !== formData.password_confirmation) {
         alert("Password dan konfirmasi password tidak cocok!");
         return;
@@ -104,7 +95,6 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
     }
   };
 
-  // --- RENDER JSX ---
   return (
     <>
       <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
@@ -117,9 +107,8 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
                   <span>&times;</span>
                 </button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 
-                {/* BAGIAN FOTO PROFIL (Hanya muncul saat mode edit) */}
                 {user && (
                   <div className="form-group text-center border-bottom pb-3 mb-3">
                     <img src={photoPreview} alt="Profile" className="profile-user-img img-fluid img-circle mb-2" style={{width: '100px', height: '100px', objectFit: 'cover'}} />
@@ -135,7 +124,6 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
                   </div>
                 )}
 
-                {/* BAGIAN DATA DIRI */}
                 <div className="form-group">
                   <label>Nama Karyawan</label>
                   <input type="text" name="nama_karyawan" value={formData.nama_karyawan} onChange={handleChange} className="form-control" required />
@@ -144,15 +132,11 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
                   <label>Nomor Induk Karyawan (NIK)</label>
                   <input type="text" name="nomor_induk_karyawan" value={formData.nomor_induk_karyawan} onChange={handleChange} className="form-control" required />
                 </div>
-                {/* <-- INPUT BARU UNTUK JOINT DATE --> */}
                 <div className="form-group">
                     <label>Tanggal Bergabung (Joint Date)</label>
                     <input type="date" name="joint_date" value={formData.joint_date} onChange={handleChange} className="form-control" required />
                 </div>
-
                 <hr />
-
-                {/* BAGIAN AKUN */}
                 <div className="form-group">
                   <label>Username</label>
                   <input type="text" name="username" value={formData.username} onChange={handleChange} className="form-control" required />
@@ -161,7 +145,6 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
                   <label>Password</label>
                   <input type="password" name="password" value={formData.password} onChange={handleChange} className="form-control" placeholder={user ? 'Kosongkan jika tidak ingin diubah' : 'Wajib diisi'} required={!user} />
                 </div>
-                {/* <-- INPUT BARU UNTUK KONFIRMASI PASSWORD --> */}
                 <div className="form-group">
                   <label>Konfirmasi Password</label>
                   <input type="password" name="password_confirmation" value={formData.password_confirmation} onChange={handleChange} className="form-control" placeholder={user ? 'Kosongkan jika tidak ingin diubah' : 'Ulangi password'} required={!user} />
@@ -182,7 +165,6 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
                     <option value="tidak aktif">Tidak Aktif</option>
                   </select>
                 </div>
-
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={onClose}>Batal</button>
