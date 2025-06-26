@@ -15,10 +15,10 @@ return new class extends Migration
             $table->foreignId('id_user')->unique()->constrained('tblUser')->onDelete('cascade');
 
             // Kolom-kolom baru
-            $table->date('tanggal_lahir')->nullable();
-            $table->date('joint_date')->nullable();
-            $table->bigInteger('nomor_telp_utama')->nullable();
-            $table->bigInteger('no_telp_sekunder')->nullable();
+             $table->dateTime('tanggal_lahir')->nullable(); // Ganti dari date()
+            $table->dateTime('joint_date')->nullable();    // Ganti dari date()
+            $table->string('nomor_telp_utama', 20)->nullable(); // Ganti dari bigint
+            $table->string('no_telp_sekunder', 20)->nullable(); // Ganti dari bigint
             $table->string('email')->nullable();
             $table->text('alamat_ktp')->nullable();
             $table->text('alamat_saat_ini')->nullable();
