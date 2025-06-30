@@ -21,6 +21,7 @@ class User extends Authenticatable
         'level_id',
         'status_karyawan',
         'profile_photo_path',
+        'joint_date',
     ];
 
     protected $hidden = [
