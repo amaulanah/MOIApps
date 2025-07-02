@@ -6,11 +6,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Storage; 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
-
+    use HasApiTokens, HasFactory, Notifiable;
     protected $table = 'tblUser';
 
     protected $fillable = [
@@ -34,6 +34,21 @@ class User extends Authenticatable
     {
         return $this->password_hashed;
     }
+
+    protected $visible = [
+        'id',
+        'nama_karyawan',
+        'nomor_induk_karyawan',
+        'username',
+        'status_karyawan',
+        'level',
+        'profile',
+        'profile_photo_url', // <-- KUNCI UTAMANYA DI SINI
+        'joint_date',
+    ];
+    // ------------------------------------
+
+    protected $appends = ['profile_photo_url'];
 
     public function level()
     {
