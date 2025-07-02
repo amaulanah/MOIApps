@@ -58,6 +58,9 @@ class UserController extends Controller
 
 public function update(Request $request, User $user)
 {
+    $request->merge([
+            'delete_photo' => filter_var($request->input('delete_photo'), FILTER_VALIDATE_BOOLEAN),
+    ]);
     // 1. Validasi semua data yang masuk, ini sudah benar.
     $validatedData = $request->validate([
         'nomor_induk_karyawan' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
