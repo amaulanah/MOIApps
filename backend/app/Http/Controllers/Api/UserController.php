@@ -56,67 +56,75 @@ class UserController extends Controller
         return $user->load('level');
     }
 
-    // backend/app/Http/Controllers/Api/UserController.php
+public function update(Request $request, User $user)
+{
+    // 1. Validasi semua data yang masuk, ini sudah benar.
+    $validatedData = $request->validate([
+        'nomor_induk_karyawan' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
+        'nama_karyawan' => 'required|string|max:100',
+        'username' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
+        'level_id' => 'required|exists:tblUserLevel,id',
+        'status_karyawan' => 'required|string|in:aktif,tidak aktif',
+        'joint_date' => 'required|date', // Tetap validasi di sini
+        'password' => ['nullable', 'confirmed', PasswordRules\Password::defaults()],
+        'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        'delete_photo' => 'nullable|boolean',
+    ]);
 
-    public function update(Request $request, User $user)
-    {
-        // --- PERUBAHAN DIMULAI DI SINI ---
+    // --- PERBAIKAN LOGIKA PENYIMPANAN DIMULAI DI SINI ---
 
-        // 1. Kita konversi nilai string 'true'/'false' dari form menjadi boolean asli
-        //    sebelum data tersebut divalidasi.
-        $request->merge([
-            'delete_photo' => filter_var($request->input('delete_photo'), FILTER_VALIDATE_BOOLEAN),
-        ]);
+    // 2. Pisahkan data untuk masing-masing tabel
+    $userData = [
+        'nama_karyawan'         => $validatedData['nama_karyawan'],
+        'nomor_induk_karyawan'  => $validatedData['nomor_induk_karyawan'],
+        'username'              => $validatedData['username'],
+        'level_id'              => $validatedData['level_id'],
+        'status_karyawan'       => $validatedData['status_karyawan'],
+    ];
 
-        // 2. JANGAN LUPA HAPUS BARIS dd() DARI SINI
-        // dd($request->all()); 
+    $profileData = [
+        'joint_date' => $validatedData['joint_date'],
+        // Jika ada field profil lain di modal, tambahkan di sini. Contoh:
+        // 'nomor_telp_utama' => $validatedData['nomor_telp_utama'],
+    ];
 
-        // --- AKHIR PERUBAHAN ---
+    // 3. Update data di tabel tblUser
+    $user->update($userData);
 
-
-        $validatedData = $request->validate([
-            'nomor_induk_karyawan' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
-            'nama_karyawan' => 'required|string|max:100',
-            'username' => ['required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
-            'level_id' => 'required|exists:tblUserLevel,id',
-            'status_karyawan' => 'required|string|in:aktif,tidak aktif',
-            'joint_date' => 'required|date',
-            'password' => ['nullable', 'confirmed', PasswordRules\Password::defaults()],
-            
-            // Aturan validasi ini sekarang akan bekerja dengan benar
-            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'delete_photo' => 'nullable|boolean',
-        ]);
-
-        // Baris ini sekarang lebih aman karena menggunakan data yang sudah tervalidasi
-        $user->fill($validatedData);
-
-        // Update password jika diisi
-        if (!empty($validatedData['password'])) {
-            $user->password_hashed = Hash::make($validatedData['password']);
-        }
-
-        // Logika untuk menghapus foto jika dicentang
-        if ($validatedData['delete_photo'] ?? false) {
-            if ($user->profile_photo_path) {
-                Storage::disk('public')->delete($user->profile_photo_path);
-                $user->profile_photo_path = null;
-            }
-        }
-
-        // Logika untuk upload foto baru
-        if ($request->hasFile('photo')) {
-            if ($user->profile_photo_path) {
-                Storage::disk('public')->delete($user->profile_photo_path);
-            }
-            $path = $request->file('photo')->store('profile-photos', 'public');
-            $user->profile_photo_path = $path;
-        }
-
+    // 4. Update password jika diisi
+    if (!empty($validatedData['password'])) {
+        $user->password_hashed = Hash::make($validatedData['password']);
         $user->save();
-
-        return response()->json($user->load('level'));
     }
+
+    // 5. Update atau Buat data di tabel tblUserProfile
+    // Metode updateOrCreate akan mencari profile milik user ini. 
+    // Jika ada, di-update. Jika belum ada, akan dibuatkan.
+    $user->profile()->updateOrCreate(
+        ['id_user' => $user->id], // Kunci untuk mencari
+        $profileData              // Data untuk di-update atau dibuat
+    );
+
+    // ... (Logika untuk foto tetap sama) ...
+    if ($request->input('delete_photo') == 'true' || $request->input('delete_photo') == 1) {
+        if ($user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+            $user->profile_photo_path = null;
+            $user->save();
+        }
+    }
+    if ($request->hasFile('photo')) {
+        if ($user->profile_photo_path) {
+            Storage::disk('public')->delete($user->profile_photo_path);
+        }
+        $path = $request->file('photo')->store('profile-photos', 'public');
+        $user->profile_photo_path = $path;
+        $user->save();
+    }
+
+    // Kembalikan data user yang sudah fresh dengan relasi yang di-load
+    return response()->json($user->fresh()->load(['level', 'profile']));
+}
 
     /**
      * Remove the specified resource from storage.
