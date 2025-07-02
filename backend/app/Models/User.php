@@ -49,6 +49,11 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class, 'id_user', 'id');
     }
 
+    public function documents()
+    {
+        // Satu User bisa memiliki banyak UserDocument
+        return $this->hasMany(UserDocument::class, 'id_user', 'id');
+    }
     // --- FUNGSI BAWAAN AUTH ---
 
     public function getAuthPassword()

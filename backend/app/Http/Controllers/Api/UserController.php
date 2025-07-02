@@ -17,14 +17,17 @@ class UserController extends Controller
      */
     public function index()
     {
-        // Ambil data user seperti biasa
+        // 1. Ambil semua user seperti biasa
         $users = User::with('level')->get();
 
-        // --- TAMBAHKAN BARIS INI ---
-        // Paksa Laravel untuk membuat atribut 'profile_photo_url' terlihat untuk setiap user
-        $users->makeVisible(['profile_photo_url']);
+        // 2. Lakukan iterasi (loop) pada setiap user dalam koleksi
+        //    dan secara manual tambahkan atribut dari accessor.
+        //    Ini adalah cara yang paling pasti untuk memastikan atributnya ada.
+        foreach ($users as $user) {
+            $user->append('profile_photo_url');
+        }
 
-        // Kembalikan koleksi user yang sudah dimodifikasi
+        // 3. Kembalikan koleksi yang sudah dimodifikasi
         return $users;
     }
 
