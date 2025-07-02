@@ -17,7 +17,15 @@ class UserController extends Controller
      */
     public function index()
     {
-        return User::with('level')->get();
+        // Ambil data user seperti biasa
+        $users = User::with('level')->get();
+
+        // --- TAMBAHKAN BARIS INI ---
+        // Paksa Laravel untuk membuat atribut 'profile_photo_url' terlihat untuk setiap user
+        $users->makeVisible(['profile_photo_url']);
+
+        // Kembalikan koleksi user yang sudah dimodifikasi
+        return $users;
     }
 
     /**
