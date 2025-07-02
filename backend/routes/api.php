@@ -33,6 +33,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/getProfile', [ProfileController::class, 'getProfile']);
     Route::post('/profile/updateAuthDetails', [ProfileController::class, 'updateAuthDetails']);
     Route::post('/profile/updateProfileDetails', [ProfileController::class, 'updateProfileDetails']);
-    Route::post('/profile/uploadFile', [ProfileController::class, 'uploadFile']); // <-- INI RUTE YANG HILANG
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
     Route::post('/profile/deleteFile', [ProfileController::class, 'deleteFile']);
 });
