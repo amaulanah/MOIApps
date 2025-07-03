@@ -13,7 +13,18 @@ class UserProfile extends Model
     protected $table = 'tblUserProfile';
 
     // Izinkan semua kolom untuk diisi secara massal (mass assignable)
-    protected $guarded = [];
+    protected $fillable = [
+        'id_user',
+        'tanggal_lahir',
+        'joint_date',
+        'nomor_telp_utama',
+        'no_telp_sekunder',
+        'email',
+        'alamat_ktp',
+        'alamat_saat_ini',
+        'pendidikan_terakhir',
+    ];
+
 
     protected $appends = ['file_foto_profil_url'];
 

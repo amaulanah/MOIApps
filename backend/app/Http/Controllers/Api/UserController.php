@@ -55,21 +55,28 @@ class UserController extends Controller
 
 public function update(Request $request, User $user)
 {
-    // 1. Persiapkan data (ini sudah benar)
+    // 1. Persiapkan dan Validasi semua data yang mungkin masuk
     $request->merge([
         'delete_photo' => filter_var($request->input('delete_photo'), FILTER_VALIDATE_BOOLEAN),
     ]);
 
-    // 2. Buat aturan validasi yang fleksibel
-    // 'sometimes' berarti: validasi field ini HANYA JIKA field tersebut ada di dalam request.
     $validatedData = $request->validate([
-        'nomor_induk_karyawan' => ['sometimes', 'required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
+        // Aturan untuk data di tabel tblUser
         'nama_karyawan' => ['sometimes', 'required', 'string', 'max:100'],
         'username' => ['sometimes', 'required', 'string', 'max:50', Rule::unique('tblUser')->ignore($user->id)],
-        'level_id' => ['sometimes', 'required', 'exists:tblUserLevel,id'],
-        'status_karyawan' => ['sometimes', 'required', 'string', 'in:aktif,tidak aktif'],
-        'joint_date' => ['sometimes', 'required', 'date'],
         'password' => ['nullable', 'confirmed', PasswordRules\Password::defaults()],
+        
+        // Aturan untuk data di tabel tblUserProfile
+        'joint_date' => 'sometimes|nullable|date',
+        'tanggal_lahir' => 'sometimes|nullable|date',
+        'nomor_telp_utama' => 'sometimes|nullable|string|max:20',
+        'no_telp_sekunder' => 'sometimes|nullable|string|max:20',
+        'email' => 'sometimes|nullable|email',
+        'alamat_ktp' => 'sometimes|nullable|string',
+        'alamat_saat_ini' => 'sometimes|nullable|string',
+        'pendidikan_terakhir' => 'sometimes|nullable|string',
+
+        // Aturan untuk file
         'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         'delete_photo' => 'nullable|boolean',
         'scan_ktp' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
@@ -78,35 +85,34 @@ public function update(Request $request, User $user)
         'scan_sim_c' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
     ]);
 
-    // 3. Update data user biasa HANYA JIKA ada di request
-    if ($request->hasAny(['nama_karyawan', 'nomor_induk_karyawan', 'username', 'level_id', 'status_karyawan'])) {
-        $user->update($request->only(['nama_karyawan', 'nomor_induk_karyawan', 'username', 'level_id', 'status_karyawan']));
-    }
-
-    // 4. Update password jika diisi
+    // 2. Update data user (jika ada)
+    $user->update($request->only(['nama_karyawan', 'username']));
     if (!empty($validatedData['password'])) {
         $user->password_hashed = Hash::make($validatedData['password']);
     }
 
-    // 5. Update profil HANYA JIKA joint_date dikirim
-    if ($request->has('joint_date')) {
-         $user->profile()->updateOrCreate(
-            ['id_user' => $user->id],
-            ['joint_date' => $validatedData['joint_date']]
-        );
-    }
-
-    // 6. Handle foto profil (sudah benar)
+    // 3. Handle foto profil (jika ada)
     if ($validatedData['delete_photo'] ?? false) {
-        if ($user->profile_photo_path) { Storage::disk('public')->delete($user->profile_photo_path); $user->profile_photo_path = null; }
+        if ($user->profile_photo_path) { Storage::disk('public')->delete($user->profile_photo_path); }
+        $user->profile_photo_path = null;
     }
     if ($request->hasFile('photo')) {
         if ($user->profile_photo_path) { Storage::disk('public')->delete($user->profile_photo_path); }
         $path = $request->file('photo')->store('profile-photos', 'public');
         $user->profile_photo_path = $path;
     }
+    $user->save();
 
-    // 7. Handle dokumen lain (sudah benar)
+    // 4. Update data profil (jika ada)
+    $profileDataToUpdate = $request->only([
+        'joint_date', 'tanggal_lahir', 'nomor_telp_utama', 'no_telp_sekunder', 
+        'email', 'alamat_ktp', 'alamat_saat_ini', 'pendidikan_terakhir'
+    ]);
+    if (!empty($profileDataToUpdate)) {
+        $user->profile()->updateOrCreate(['id_user' => $user->id], $profileDataToUpdate);
+    }
+    
+    // 5. Handle dokumen lain (jika ada)
     $documentTypes = ['scan_ktp', 'scan_ijazah', 'scan_sim_a', 'scan_sim_c'];
     foreach ($documentTypes as $type) {
         if ($request->hasFile($type)) {
@@ -119,11 +125,8 @@ public function update(Request $request, User $user)
             );
         }
     }
-
-    // 8. Simpan semua perubahan pada model User
-    $user->save();
-
-    // 9. Kembalikan data user yang paling baru
+    
+    // 6. Kembalikan data user yang paling baru
     return response()->json($user->fresh()->load(['level', 'profile', 'documents']));
 }
 

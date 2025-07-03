@@ -163,7 +163,7 @@ export default function ProfilePage() {
                                     <div className="card-header"><h3 className="card-title">Info Karyawan</h3></div>
                                     <div className="card-body">
                                         <div className="form-group"><label>Nomor Induk Karyawan</label><input type="text" className="form-control" value={currentUser?.nomor_induk_karyawan || ''} disabled /></div>
-                                        <div className="form-group"><label>Tanggal Bergabung</label><input type="date" className="form-control" name="joint_date" value={formData.joint_date} onChange={handleFormChange} /></div>
+                                        <div className="form-group"><label>Tanggal Bergabung</label><input type="date" className="form-control" name="joint_date" value={formData.joint_date} onChange={handleFormChange} disabled/></div>
                                     </div>
                                 </div>
                             </div>

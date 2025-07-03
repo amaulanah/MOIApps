@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserLevelController;
 use App\Http\Controllers\Api\ProfileController; // <-- Pastikan ini di-import
+use App\Http\Controllers\Api\SupplierController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('can:access-account-control')->group(function () {
         Route::apiResource('/users', UserController::class);
         Route::apiResource('/user-levels', UserLevelController::class);
+        Route::apiResource('/suppliers', SupplierController::class);
     });
     
     // ==========================================================
