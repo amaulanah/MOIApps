@@ -36,4 +36,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
     // Route::post('/profile/deleteFile', [ProfileController::class, 'deleteFile']);
     Route::post('/profile/details', [ProfileController::class, 'updateDetails']);
+    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto']);
 });
