@@ -30,9 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ==========================================================
     // PERBAIKAN: RUTE LENGKAP UNTUK USER PROFILE
     // ==========================================================
-    Route::get('/profile/getProfile', [ProfileController::class, 'getProfile']);
-    Route::post('/profile/updateAuthDetails', [ProfileController::class, 'updateAuthDetails']);
-    Route::post('/profile/updateProfileDetails', [ProfileController::class, 'updateProfileDetails']);
-    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
-    Route::post('/profile/deleteFile', [ProfileController::class, 'deleteFile']);
+    // Route::get('/profile/getProfile', [ProfileController::class, 'getProfile']);
+    // Route::post('/profile/updateAuthDetails', [ProfileController::class, 'updateAuthDetails']);
+    // Route::post('/profile/updateProfileDetails', [ProfileController::class, 'updateProfileDetails']);
+    // Route::post('/profile/photo', [ProfileController::class, 'updatePhoto']);
+    // Route::post('/profile/deleteFile', [ProfileController::class, 'deleteFile']);
+    Route::post('/profile/details', [ProfileController::class, 'updateDetails']);
 });

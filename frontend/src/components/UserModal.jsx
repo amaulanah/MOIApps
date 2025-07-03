@@ -27,7 +27,7 @@ export default function UserModal({ user, userLevels, onClose, onSave }) {
         password_confirmation: '',
         level_id: user.level_id || '',
         status_karyawan: user.status_karyawan || 'aktif',
-        joint_date: user.joint_date || '',
+        joint_date: user.joint_date ? user.joint_date.substring(0, 10) : '',
         delete_photo: false,
       });
       setPhotoPreview(user.profile_photo_url || null); // Gunakan null jika kosong
