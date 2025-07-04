@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axiosClient from '../../api/axios';
 import Swal from 'sweetalert2';
-import PriceListModal from './PriceListModal'; // Menggunakan modal yang benar
+import PriceListModal from './PriceListModal';
+import StockAdjustmentModal from './StockAdjustmentModal';
 
 // --- FUNGSI HELPER BARU UNTUK FORMAT HARGA ---
 const formatCurrency = (harga, mata_uang) => {
@@ -98,7 +99,7 @@ export default function StockAdjustmentManagement() {
     };
 
     const handleOpenModal = async (item = null) => {
-        console.log("Data yang DIKIRIM ke modal:", item);
+        // console.log("Data yang DIKIRIM ke modal:", item);
         if (item) {
             setEditingItem(item);
             setIsModalOpen(true);

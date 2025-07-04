@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 export default function StockAdjustmentModal({ item, onClose, onSave }) {
 
-    console.log("Data yang DITERIMA oleh modal:", item);
+    // console.log("Data yang DITERIMA oleh modal:", item);
 
     const [formData, setFormData] = useState({
         quantity: 0,
