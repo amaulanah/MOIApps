@@ -3,17 +3,53 @@ import axiosClient from '../../api/axios';
 import Swal from 'sweetalert2';
 import PriceListModal from './PriceListModal'; // Menggunakan modal yang benar
 
+// --- FUNGSI HELPER BARU UNTUK FORMAT HARGA ---
+const formatCurrency = (harga, mata_uang) => {
+    const number = parseFloat(harga);
+    if (isNaN(number)) {
+        return '-';
+    }
+
+    const options = {
+        style: 'currency',
+        currency: mata_uang,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    };
+
+    // Gunakan Intl.NumberFormat untuk pemformatan yang benar
+    // dan ganti beberapa simbol default agar sesuai keinginan Anda
+    let formatted = new Intl.NumberFormat('en-US', options).format(number);
+
+    switch (mata_uang) {
+        case 'IDR':
+            // Mengubah format default $ menjadi Rp
+            return `Rp ${new Intl.NumberFormat('id-ID').format(number)}`;
+        case 'SGD':
+            return `S$${number.toLocaleString('en-US')}`;
+        case 'USD':
+            return `$${number.toLocaleString('en-US')}`;
+        case 'CNY':
+            return `¥${number.toLocaleString('en-US')}`;
+        case 'JPY':
+            return `¥${number.toLocaleString('en-US')}`;
+        case 'MYR':
+            return `RM${number.toLocaleString('en-US')}`;
+        default:
+            return formatted;
+    }
+};
+// ------------------------------------------
+
 export default function PriceListManagement() {
     const [priceList, setPriceList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
 
-    // State untuk Search, Sort
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState({ key: 'nama_part', direction: 'ascending' });
 
-    // Efek untuk mengatasi scroll modal
     useEffect(() => {
         if (isModalOpen) { document.body.classList.add('modal-open'); }
         else { document.body.classList.remove('modal-open'); }
@@ -30,7 +66,6 @@ export default function PriceListManagement() {
 
     useEffect(fetchData, []);
 
-    // Logika untuk Search dan Sort
     const processedItems = useMemo(() => {
         let sortedItems = [...priceList];
         if (searchTerm) {
@@ -50,7 +85,6 @@ export default function PriceListManagement() {
     }, [priceList, searchTerm, sortConfig]);
 
     const getNestedValue = (obj, path) => path.split('.').reduce((o, i) => (o ? o[i] : null), obj);
-
     const requestSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -58,7 +92,6 @@ export default function PriceListManagement() {
         }
         setSortConfig({ key, direction });
     };
-
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return ' ';
         return sortConfig.direction === 'ascending' ? '▲' : '▼';
@@ -69,10 +102,9 @@ export default function PriceListManagement() {
             setEditingItem(item);
             setIsModalOpen(true);
         } else {
-            // Mode Tambah: ambil kode baru dari API
             try {
                 const { data } = await axiosClient.get('/price-lists/next-code');
-                setEditingItem({ kode_part: data.next_code }); // Set data awal dengan kode baru
+                setEditingItem({ kode_part: data.next_code });
                 setIsModalOpen(true);
             // eslint-disable-next-line no-unused-vars
             } catch (error) {
@@ -139,23 +171,29 @@ export default function PriceListManagement() {
 
             <div className="table-responsive">
                 <table className="table table-bordered table-hover">
+                    {/* --- PERUBAHAN HEADER TABEL --- */}
                     <thead>
                         <tr>
                             <th onClick={() => requestSort('kode_part')} style={{cursor: 'pointer'}}>Kode Part {getSortIcon('kode_part')}</th>
                             <th onClick={() => requestSort('nama_part')} style={{cursor: 'pointer'}}>Nama Part {getSortIcon('nama_part')}</th>
+                            <th onClick={() => requestSort('quantity')} style={{cursor: 'pointer'}}>Qty/UOM {getSortIcon('quantity')}</th>
+                            <th onClick={() => requestSort('harga')} style={{cursor: 'pointer'}}>Harga {getSortIcon('harga')}</th>
                             <th onClick={() => requestSort('kategori')} style={{cursor: 'pointer'}}>Kategori {getSortIcon('kategori')}</th>
                             <th onClick={() => requestSort('supplier.nama_supplier')} style={{cursor: 'pointer'}}>Supplier {getSortIcon('supplier.nama_supplier')}</th>
                             <th style={{width: '120px'}}>Aksi</th>
                         </tr>
                     </thead>
+                    {/* --- PERUBAHAN BODY TABEL --- */}
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="5" className="text-center">Loading...</td></tr>
+                            <tr><td colSpan="7" className="text-center">Loading...</td></tr>
                         ) : processedItems.length > 0 ? (
                             processedItems.map(item => (
                                 <tr key={item.id}>
                                     <td>{item.kode_part}</td>
                                     <td>{item.nama_part}</td>
+                                    <td>{`${item.quantity} ${item.uom}`}</td>
+                                    <td>{formatCurrency(item.harga, item.mata_uang)}</td>
                                     <td>{item.kategori}</td>
                                     <td>{item.supplier?.nama_supplier || 'N/A'}</td>
                                     <td>
@@ -169,7 +207,7 @@ export default function PriceListManagement() {
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="5" className="text-center">Data tidak ditemukan.</td></tr>
+                            <tr><td colSpan="7" className="text-center">Data tidak ditemukan.</td></tr>
                         )}
                     </tbody>
                 </table>
