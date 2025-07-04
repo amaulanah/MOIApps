@@ -57,8 +57,17 @@ export default function PriceListModal({ item, onClose, onSave }) {
                                 </div>
                                 <div className="form-group"><label>Deskripsi</label><textarea name="deskripsi_part" value={formData.deskripsi_part} onChange={handleChange} className="form-control" rows="3"></textarea></div>
                                 <div className="row">
-                                    <div className="col-md-6 form-group"><label>Quantity</label><input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="form-control" required /></div>
-                                    <div className="col-md-6 form-group"><label>Satuan (UOM)</label><select name="uom" value={formData.uom} onChange={handleChange} className="form-control" required><option>PCS</option><option>UNIT</option><option>ROLL</option><option>METER</option><option>KG</option><option>CM</option><option>MM</option><option>BATANG</option><option>KOTAK</option><option>SET</option><option>PACK</option><option>BUNGKUS</option></select></div>
+                                    <div className="col-md-6 form-group">
+                                        <label>Quantity</label>
+                                        <input type="number" name="quantity" value={formData.quantity} className="form-control" disabled />
+                                        <small className="form-text text-muted">Quantity dan UOM hanya bisa diganti oleh role Store.</small>
+                                    </div>
+                                    <div className="col-md-6 form-group">
+                                        <label>Satuan (UOM)</label>
+                                        <select name="uom" value={formData.uom} className="form-control" disabled>
+                                            <option>PCS</option><option>UNIT</option><option>ROLL</option><option>METER</option><option>KG</option><option>CM</option><option>MM</option><option>BATANG</option><option>KOTAK</option><option>SET</option><option>PACK</option><option>BUNGKUS</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div className="row">
                                     <div className="col-md-6 form-group">

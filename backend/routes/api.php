@@ -44,4 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/price-lists/next-code', [PriceListController::class, 'getNextCode']);
     Route::apiResource('/price-lists', PriceListController::class);
+
+    Route::put('/stock-adjustments/{priceList}', [PriceListController::class, 'updateStock']);
 });

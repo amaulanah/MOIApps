@@ -68,6 +68,11 @@ const router = createBrowserRouter([
         path: '/suppliers',
         element: <SuppliersPage />
       },
+
+      {
+        path: '/stock-adjustment',
+        element: <StockAdjustmentPage />
+      },
     ]
   },
   {

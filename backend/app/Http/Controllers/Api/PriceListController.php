@@ -89,7 +89,20 @@ class PriceListController extends Controller
         $priceList->update($validatedData);
         return response()->json($priceList->load('supplier'));
     }
+    public function updateStock(Request $request, PriceList $priceList)
+        {
+            // Validasi hanya untuk quantity dan uom
+            $validatedData = $request->validate([
+                'quantity' => 'present|numeric|min:0',
+                'uom' => 'required|string',
+            ]);
 
+            // Update hanya field yang diizinkan
+            $priceList->update($validatedData);
+
+            // Kembalikan data yang sudah diupdate
+            return response()->json($priceList->load('supplier'));
+        }
     public function destroy(PriceList $priceList)
     {
         $priceList->delete();
