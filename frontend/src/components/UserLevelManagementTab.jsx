@@ -1,137 +1,141 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axios';
 import Swal from 'sweetalert2';
-import { useConfirmation } from '../context/ConfirmationContext';
-import UserLevelModal from './UserLevelModal'; // Pastikan mengimpor modal yang benar
+import UserLevelModal from './UserLevelModal';
 
 export default function UserLevelManagementTab() {
-  const [levels, setLevels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingLevel, setEditingLevel] = useState(null);
-  const confirm = useConfirmation();
+    const [userLevels, setUserLevels] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingLevel, setEditingLevel] = useState(null);
+    const [allPermissions, setAllPermissions] = useState([]);
 
-  // Fungsi untuk mengambil data level dari API
-  const fetchLevels = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosClient.get('/user-levels');
-      setLevels(response.data);
-    // eslint-disable-next-line no-unused-vars
-    } catch (error) {
-      Swal.fire('Error', 'Gagal memuat data level dari server.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        // Ambil semua permission saat komponen dimuat
+        axiosClient.get('/permissions').then(({ data }) => {
+            setAllPermissions(data);
+        });
+        fetchData();
+    }, []);
 
-  // Ambil data saat komponen pertama kali dimuat
-  useEffect(() => {
-    fetchLevels();
-  }, []);
+    useEffect(() => {
+        if (isModalOpen) { document.body.classList.add('modal-open'); }
+        else { document.body.classList.remove('modal-open'); }
+        return () => { document.body.classList.remove('modal-open'); };
+    }, [isModalOpen]);
 
-  const handleOpenModal = (level = null) => {
-    setEditingLevel(level);
-    setIsModalOpen(true);
-  };
+    const fetchData = () => {
+        setLoading(true);
+        axiosClient.get('/user-levels')
+            .then(({ data }) => setUserLevels(data))
+            .catch(() => Swal.fire('Error', 'Gagal memuat data.', 'error'))
+            .finally(() => setLoading(false));
+    };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingLevel(null);
-  };
+    const handleOpenModal = (level = null) => {
+        setEditingLevel(level);
+        setIsModalOpen(true);
+    };
 
-  const handleSave = async (levelData) => {
-    confirm({
-      title: 'Konfirmasi Penyimpanan',
-      message: 'Anda yakin ingin menyimpan data level ini?',
-      onConfirm: async () => {
-        const isEditing = !!editingLevel;
-        const url = isEditing ? `/user-levels/${editingLevel.id}` : '/user-levels';
-        const method = isEditing ? 'put' : 'post';
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setEditingLevel(null);
+    };
 
-        try {
-          await axiosClient[method](url, levelData);
-          Swal.fire('Sukses!', `Level berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}.`, 'success');
-          handleCloseModal();
-          fetchLevels();
-        } catch (error) {
-          const message = error.response?.data?.message || 'Terjadi kesalahan.';
-          Swal.fire('Error', message, 'error');
-        }
-      },
-    });
-  };
+    const handleSave = (formData, id) => {
+        const request = id
+            ? axiosClient.put(`/user-levels/${id}`, formData)
+            : axiosClient.post('/user-levels', formData);
 
-  const handleDelete = (level) => {
-    confirm({
-      title: 'Konfirmasi Hapus',
-      message: `Anda yakin ingin menghapus level "${level.user_level}"?`,
-      confirmText: 'Ya, Hapus',
-      confirmColor: 'danger',
-      onConfirm: async () => {
-        try {
-          await axiosClient.delete(`/user-levels/${level.id}`);
-          Swal.fire('Dihapus!', 'Level telah berhasil dihapus.', 'success');
-          fetchLevels();
-        } catch (error) {
-          const message = error.response?.data?.message || 'Gagal menghapus level.';
-          Swal.fire('Error', message, 'error');
-        }
-      },
-    });
-  };
+        request.then(() => {
+            Swal.fire('Sukses!', 'Data level user berhasil disimpan.', 'success');
+            fetchData();
+            handleCloseModal();
+        }).catch(error => {
+            const message = error.response?.data?.message || 'Gagal menyimpan data.';
+            Swal.fire('Error', message, 'error');
+        });
+    };
 
-  return (
-    <div>
-      {/* Tombol yang benar untuk level user */}
-      <button className="btn btn-primary mb-3" onClick={() => handleOpenModal()}>
-        <i className="fas fa-plus mr-2"></i> Tambah Level
-      </button>
+    // --- FUNGSI BARU UNTUK MENGHAPUS ROLE ---
+    const handleDelete = (level) => {
+        Swal.fire({
+            title: 'Anda yakin?',
+            text: `Anda akan menghapus role "${level.user_level}". Tindakan ini tidak dapat dibatalkan!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axiosClient.delete(`/user-levels/${level.id}`)
+                    .then(() => {
+                        Swal.fire('Dihapus!', 'Role telah berhasil dihapus.', 'success');
+                        fetchData(); // Muat ulang data setelah sukses
+                    })
+                    .catch(error => {
+                        // Menampilkan pesan error dari backend (jika role masih dipakai)
+                        const message = error.response?.data?.message || 'Gagal menghapus role.';
+                        Swal.fire('Error', message, 'error');
+                    });
+            }
+        });
+    };
+    // ------------------------------------
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        /* Tabel yang benar untuk level user */
-        <table className="table table-bordered table-striped">
-          <thead>
-            <tr>
-              <th>Nama Level</th>
-              <th style={{ width: '150px' }}>Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {levels.map(level => (
-              <tr key={level.id}>
-                <td>{level.user_level}</td>
-                <td>
-                    {/* Tombol Edit HANYA akan muncul jika level BUKAN 'admin' */}
-                    {level.user_level === 'admin' ? (
-                        <span className="text-muted font-italic">Unavailable</span>
-                    ) : (
-                        <>
-                        <button className="btn btn-sm btn-warning mr-2" onClick={() => handleOpenModal(level)}>
-                            <i className="fas fa-edit"></i> Edit
-                        </button>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(level)}>
-                            <i className="fas fa-trash"></i> Hapus
-                        </button>
-                        </>
-                    )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    return (
+        <div>
+            <div className="mb-3">
+                <button className="btn btn-primary" onClick={() => handleOpenModal()}>
+                    <i className="fas fa-plus mr-2"></i> Tambah Role Baru
+                </button>
+            </div>
 
-      {/* Memanggil modal yang benar */}
-      {isModalOpen && (
-        <UserLevelModal
-          level={editingLevel}
-          onClose={handleCloseModal}
-          onSave={handleSave}
-        />
-      )}
-    </div>
-  );
+            <table className="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Nama Role</th>
+                        <th>Hak Akses</th>
+                        <th style={{ width: '120px' }}>Aksi</th> 
+                    </tr>
+                </thead>
+                <tbody>
+                    {loading ? (
+                        <tr><td colSpan="3" className="text-center">Loading...</td></tr>
+                    ) : userLevels.map(level => (
+                        <tr key={level.id}>
+                            <td>{level.user_level}</td>
+                            <td>
+                                {level.permissions.map(perm => (
+                                    <span key={perm.id} className="badge badge-info mr-1">{perm.name}</span>
+                                ))}
+                            </td>
+                            <td>
+                                <button className="btn btn-sm btn-warning mr-2" onClick={() => handleOpenModal(level)}>
+                                    <i className="fas fa-edit"></i>
+                                </button>
+                                {/* Tombol Hapus hanya muncul jika bukan role 'admin' */}
+                                {level.user_level !== 'admin' && (
+                                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(level)}>
+                                        <i className="fas fa-trash"></i>
+                                    </button>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            {isModalOpen && (
+                <UserLevelModal
+                    level={editingLevel}
+                    allPermissions={allPermissions}
+                    onClose={handleCloseModal}
+                    onSave={handleSave}
+                />
+            )}
+        </div>
+    );
 }

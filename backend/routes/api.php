@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\PriceListController;
 use App\Http\Controllers\Api\StockAdjustmentController;
+use App\Http\Controllers\Api\PermissionController;
 
 
 /*
@@ -44,8 +45,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/details', [ProfileController::class, 'updateDetails']);
     Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto']);
 
+    // LETAKKAN RUTE YANG LEBIH SPESIFIK DI ATAS
+    Route::put('/stock-adjustments/{id}', [StockAdjustmentController::class, 'update']);
     Route::get('/price-lists/next-code', [PriceListController::class, 'getNextCode']);
+
+    // BARU SETELAH ITU, DAFTARKAN RUTE RESOURCE YANG LEBIH UMUM
     Route::apiResource('/price-lists', PriceListController::class);
 
-    Route::put('/stock-adjustments/{id}', [StockAdjustmentController::class, 'update']);
+    Route::get('/permissions', [PermissionController::class, 'index']);
 });

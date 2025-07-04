@@ -120,20 +120,26 @@ export default function StockAdjustmentManagement() {
         setEditingItem(null);
     };
 
-    const handleSave = (formData, id) => {
-        const request = id
-            ? axiosClient.post(`/price-lists/${id}`, formData)
-            : axiosClient.post('/price-lists', formData);
+const handleSave = (formDataFromModal, id) => {
+    if (!id) return;
 
-        request.then(() => {
-            Swal.fire('Sukses', `Part berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`, 'success');
+    // Buat FormData di sini
+    const payload = new FormData();
+    payload.append('quantity', formDataFromModal.quantity);
+    payload.append('uom', formDataFromModal.uom);
+    payload.append('_method', 'PUT'); // Sisipkan method PUT
+
+    // Panggil endpoint yang benar dengan metode POST
+    axiosClient.post(`/stock-adjustments/${id}`, payload)
+        .then(() => {
+            Swal.fire('Sukses', 'Stok berhasil diperbarui.', 'success');
             fetchData();
             handleCloseModal();
         }).catch(error => {
             const message = error.response?.data?.message || 'Terjadi kesalahan.';
             Swal.fire('Error', message, 'error');
         });
-    };
+};
 
     // eslint-disable-next-line no-unused-vars
     const handleDelete = (id) => {
@@ -166,6 +172,7 @@ export default function StockAdjustmentManagement() {
                         <tr>
                             <th onClick={() => requestSort('kode_part')}>Kode Part {getSortIcon('kode_part')}</th>
                             <th onClick={() => requestSort('nama_part')}>Nama Part {getSortIcon('nama_part')}</th>
+                            <th>Deskripsi Part</th>
                             <th onClick={() => requestSort('quantity')}>Qty/UOM {getSortIcon('quantity')}</th>
                             <th>Harga</th>
                             <th>Supplier</th>
@@ -179,6 +186,7 @@ export default function StockAdjustmentManagement() {
                             <tr key={item.id}>
                                 <td>{item.kode_part}</td>
                                 <td>{item.nama_part}</td>
+                                <td>{item.deskripsi_part}</td>
                                 <td>{`${item.quantity} ${item.uom}`}</td>
                                 <td>{formatCurrency(item.harga, item.mata_uang)}</td>
                                 <td>{item.supplier?.nama_supplier || 'N/A'}</td>

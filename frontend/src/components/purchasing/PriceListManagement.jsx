@@ -176,6 +176,7 @@ export default function PriceListManagement() {
                         <tr>
                             <th onClick={() => requestSort('kode_part')} style={{cursor: 'pointer'}}>Kode Part {getSortIcon('kode_part')}</th>
                             <th onClick={() => requestSort('nama_part')} style={{cursor: 'pointer'}}>Nama Part {getSortIcon('nama_part')}</th>
+                            <th>Deskripsi Part</th>
                             <th onClick={() => requestSort('quantity')} style={{cursor: 'pointer'}}>Qty/UOM {getSortIcon('quantity')}</th>
                             <th onClick={() => requestSort('harga')} style={{cursor: 'pointer'}}>Harga {getSortIcon('harga')}</th>
                             <th onClick={() => requestSort('kategori')} style={{cursor: 'pointer'}}>Kategori {getSortIcon('kategori')}</th>
@@ -192,6 +193,7 @@ export default function PriceListManagement() {
                                 <tr key={item.id}>
                                     <td>{item.kode_part}</td>
                                     <td>{item.nama_part}</td>
+                                    <td>{item.deskripsi_part}</td>
                                     <td>{`${item.quantity} ${item.uom}`}</td>
                                     <td>{formatCurrency(item.harga, item.mata_uang)}</td>
                                     <td>{item.kategori}</td>
