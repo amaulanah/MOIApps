@@ -12,7 +12,7 @@ const SubMenuItem = ({ to, icon, children }) => (
 );
 
 export default function Sidebar() {
-  const { currentUser } = useAuth();
+  const { currentUser, userCan } = useAuth();
   const location = useLocation();
 
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/account-control'));
@@ -26,6 +26,7 @@ export default function Sidebar() {
     ['/master-part', '/incoming', '/outgoing', '/return', '/stock-adjustment', '/balance-stock'].some(path => location.pathname.startsWith(path))
   );
 
+  // eslint-disable-next-line no-unused-vars
   const canAccessAccountControl = ['admin', 'director'].includes(currentUser?.level?.user_level);
   const canAccessSales = true;
   const canAccessPurchasing = true;
@@ -48,6 +49,7 @@ export default function Sidebar() {
         {/* <div className="user-panel mt-3 pb-3 mb-3 d-flex">... User Panel ...</div> */}
         <nav className="mt-2">
           <ul className="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {userCan('view_dashboard') && (
             <li className="nav-item">
               {/* Link NavLink membungkus ikon dan paragraf */}
               <NavLink to="/dashboard" className="nav-link">
@@ -57,8 +59,9 @@ export default function Sidebar() {
                 <p>Dashboard</p>
               </NavLink>
             </li>
+            )}
 
-            {canAccessAccountControl && (
+            {userCan('manage_account_control') && (
               <li className={`nav-item ${adminOpen ? 'menu-is-opening menu-open' : ''}`}>
                 <a href="#" className="nav-link" onClick={() => setAdminOpen(!adminOpen)}>
                   <i className="nav-icon fas fa-user-shield"></i><p>ADMIN CONTROL<i className="right fas fa-angle-left"></i></p>
