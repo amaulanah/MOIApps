@@ -41,7 +41,7 @@ export default function SupplierModal({ supplier, onClose, onSave }) {
                                 <button type="button" className="close" onClick={onClose}><span>&times;</span></button>
                             </div>
                             <div className="modal-body">
-                                <div className="form-group"><label>Kode Supplier</label><input type="text" name="kode_supplier" value={formData.kode_supplier} onChange={handleChange} className="form-control" required /></div>
+                                <div className="form-group"><label>Kode Supplier</label><input type="text" name="kode_supplier" value={formData.kode_supplier} onChange={handleChange} className="form-control" required disabled/></div>
                                 <div className="form-group"><label>Nama Supplier</label><input type="text" name="nama_supplier" value={formData.nama_supplier} onChange={handleChange} className="form-control" required /></div>
                                 <div className="form-group"><label>Nomor Telepon</label><input type="text" name="nomor_telepon_supplier" value={formData.nomor_telepon_supplier} onChange={handleChange} className="form-control" /></div>
                                 <div className="form-group"><label>Email</label><input type="email" name="email_supplier" value={formData.email_supplier} onChange={handleChange} className="form-control" /></div>

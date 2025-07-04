@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axiosClient from '../api/axios';
+import axiosClient from '../../api/axios';
 import Swal from 'sweetalert2';
-import SupplierModal from './SupplierModal';
+import PriceListModal from './PriceListModal'; // Menggunakan modal yang benar
 
-export default function SupplierManagement() {
-    const [suppliers, setSuppliers] = useState([]);
+export default function PriceListManagement() {
+    const [priceList, setPriceList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingSupplier, setEditingSupplier] = useState(null);
-    
-    // State untuk Search, Sort, Filter
+    const [editingItem, setEditingItem] = useState(null);
+
+    // State untuk Search, Sort
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortConfig, setSortConfig] = useState({ key: 'nama_supplier', direction: 'ascending' });
+    const [sortConfig, setSortConfig] = useState({ key: 'nama_part', direction: 'ascending' });
 
     // Efek untuk mengatasi scroll modal
     useEffect(() => {
@@ -22,30 +22,34 @@ export default function SupplierManagement() {
 
     const fetchData = () => {
         setLoading(true);
-        axiosClient.get('/suppliers')
-            .then(({ data }) => setSuppliers(data))
-            .catch(() => Swal.fire('Error', 'Gagal memuat data supplier.', 'error'))
+        axiosClient.get('/price-lists')
+            .then(({ data }) => setPriceList(data))
+            .catch(() => Swal.fire('Error', 'Gagal memuat data price list.', 'error'))
             .finally(() => setLoading(false));
     };
 
     useEffect(fetchData, []);
 
-    // Logika untuk Search, Sort
-    const processedSuppliers = useMemo(() => {
-        let sortedItems = [...suppliers];
+    // Logika untuk Search dan Sort
+    const processedItems = useMemo(() => {
+        let sortedItems = [...priceList];
         if (searchTerm) {
             sortedItems = sortedItems.filter(item =>
-                item.nama_supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.kode_supplier.toLowerCase().includes(searchTerm.toLowerCase())
+                item.nama_part.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.kode_part.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
         sortedItems.sort((a, b) => {
-            if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'ascending' ? -1 : 1;
-            if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'ascending' ? 1 : -1;
+            const valA = sortConfig.key.includes('.') ? getNestedValue(a, sortConfig.key) : a[sortConfig.key];
+            const valB = sortConfig.key.includes('.') ? getNestedValue(b, sortConfig.key) : b[sortConfig.key];
+            if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+            if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
             return 0;
         });
         return sortedItems;
-    }, [suppliers, searchTerm, sortConfig]);
+    }, [priceList, searchTerm, sortConfig]);
+
+    const getNestedValue = (obj, path) => path.split('.').reduce((o, i) => (o ? o[i] : null), obj);
 
     const requestSort = (key) => {
         let direction = 'ascending';
@@ -60,37 +64,35 @@ export default function SupplierManagement() {
         return sortConfig.direction === 'ascending' ? '▲' : '▼';
     };
 
-    const handleOpenModal = async (supplier = null) => {
-    if (supplier) {
-        // Mode Edit: langsung buka modal dengan data yang ada
-        setEditingSupplier(supplier);
-        setIsModalOpen(true);
-    } else {
-        // Mode Tambah: ambil kode baru dari API dulu
-        try {
-            const { data } = await axiosClient.get('/suppliers/next-code');
-            // Buka modal dengan data awal (kode sudah terisi)
-            setEditingSupplier({ kode_supplier: data.next_code });
+    const handleOpenModal = async (item = null) => {
+        if (item) {
+            setEditingItem(item);
             setIsModalOpen(true);
-        // eslint-disable-next-line no-unused-vars
-        } catch (error) {
-            Swal.fire('Error', 'Gagal mendapatkan kode supplier baru.', 'error');
+        } else {
+            // Mode Tambah: ambil kode baru dari API
+            try {
+                const { data } = await axiosClient.get('/price-lists/next-code');
+                setEditingItem({ kode_part: data.next_code }); // Set data awal dengan kode baru
+                setIsModalOpen(true);
+            // eslint-disable-next-line no-unused-vars
+            } catch (error) {
+                Swal.fire('Error', 'Gagal mendapatkan kode part baru.', 'error');
+            }
         }
-    }
-  };
+    };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setEditingSupplier(null);
+        setEditingItem(null);
     };
 
     const handleSave = (formData, id) => {
         const request = id
-            ? axiosClient.put(`/suppliers/${id}`, formData)
-            : axiosClient.post('/suppliers', formData);
+            ? axiosClient.put(`/price-lists/${id}`, formData)
+            : axiosClient.post('/price-lists', formData);
 
         request.then(() => {
-            Swal.fire('Sukses', `Supplier berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`, 'success');
+            Swal.fire('Sukses', `Part berhasil ${id ? 'diperbarui' : 'ditambahkan'}.`, 'success');
             fetchData();
             handleCloseModal();
         }).catch(error => {
@@ -101,14 +103,14 @@ export default function SupplierManagement() {
 
     const handleDelete = (id) => {
         Swal.fire({
-            title: 'Anda yakin?', text: "Data supplier ini akan dihapus permanen!",
+            title: 'Anda yakin?', text: "Data part ini akan dihapus permanen!",
             icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!',
         }).then((result) => {
             if (result.isConfirmed) {
-                axiosClient.delete(`/suppliers/${id}`)
+                axiosClient.delete(`/price-lists/${id}`)
                     .then(() => {
-                        Swal.fire('Dihapus!', 'Data supplier berhasil dihapus.', 'success');
+                        Swal.fire('Dihapus!', 'Data part berhasil dihapus.', 'success');
                         fetchData();
                     })
                     .catch(() => Swal.fire('Error', 'Gagal menghapus data.', 'error'));
@@ -123,14 +125,14 @@ export default function SupplierManagement() {
                     <input
                         type="text"
                         className="form-control"
-                        placeholder="Cari berdasarkan Kode atau Nama Supplier..."
+                        placeholder="Cari berdasarkan Kode atau Nama Part..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <div className="col-md-6 text-right">
                     <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-                        <i className="fas fa-plus mr-2"></i> Tambah Supplier
+                        <i className="fas fa-plus mr-2"></i> Tambah Part Baru
                     </button>
                 </div>
             </div>
@@ -139,25 +141,23 @@ export default function SupplierManagement() {
                 <table className="table table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th onClick={() => requestSort('kode_supplier')} style={{cursor: 'pointer'}}>Kode {getSortIcon('kode_supplier')}</th>
-                            <th onClick={() => requestSort('nama_supplier')} style={{cursor: 'pointer'}}>Nama Supplier {getSortIcon('nama_supplier')}</th>
-                            <th onClick={() => requestSort('nomor_telepon_supplier')} style={{cursor: 'pointer'}}>Telepon {getSortIcon('nomor_telepon_supplier')}</th>
-                            <th onClick={() => requestSort('email_supplier')} style={{cursor: 'pointer'}}>Email {getSortIcon('email_supplier')}</th>
-                            <th>Alamat</th>
+                            <th onClick={() => requestSort('kode_part')} style={{cursor: 'pointer'}}>Kode Part {getSortIcon('kode_part')}</th>
+                            <th onClick={() => requestSort('nama_part')} style={{cursor: 'pointer'}}>Nama Part {getSortIcon('nama_part')}</th>
+                            <th onClick={() => requestSort('kategori')} style={{cursor: 'pointer'}}>Kategori {getSortIcon('kategori')}</th>
+                            <th onClick={() => requestSort('supplier.nama_supplier')} style={{cursor: 'pointer'}}>Supplier {getSortIcon('supplier.nama_supplier')}</th>
                             <th style={{width: '120px'}}>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="6" className="text-center">Loading...</td></tr>
-                        ) : processedSuppliers.length > 0 ? (
-                            processedSuppliers.map(item => (
+                            <tr><td colSpan="5" className="text-center">Loading...</td></tr>
+                        ) : processedItems.length > 0 ? (
+                            processedItems.map(item => (
                                 <tr key={item.id}>
-                                    <td>{item.kode_supplier}</td>
-                                    <td>{item.nama_supplier}</td>
-                                    <td>{item.nomor_telepon_supplier}</td>
-                                    <td>{item.email_supplier}</td>
-                                    <td>{item.alamat_supplier}</td>
+                                    <td>{item.kode_part}</td>
+                                    <td>{item.nama_part}</td>
+                                    <td>{item.kategori}</td>
+                                    <td>{item.supplier?.nama_supplier || 'N/A'}</td>
                                     <td>
                                         <button className="btn btn-sm btn-warning mr-2" onClick={() => handleOpenModal(item)}>
                                             <i className="fas fa-edit"></i>
@@ -169,15 +169,15 @@ export default function SupplierManagement() {
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="6" className="text-center">Data tidak ditemukan.</td></tr>
+                            <tr><td colSpan="5" className="text-center">Data tidak ditemukan.</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
             {isModalOpen && (
-                <SupplierModal
-                    supplier={editingSupplier}
+                <PriceListModal
+                    item={editingItem}
                     onClose={handleCloseModal}
                     onSave={handleSave}
                 />

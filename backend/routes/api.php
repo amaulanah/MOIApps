@@ -5,8 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserLevelController;
-use App\Http\Controllers\Api\ProfileController; // <-- Pastikan ini di-import
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\PriceListController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('can:access-account-control')->group(function () {
         Route::apiResource('/users', UserController::class);
         Route::apiResource('/user-levels', UserLevelController::class);
+        Route::get('/suppliers/next-code', [SupplierController::class, 'getNextCode']);
         Route::apiResource('/suppliers', SupplierController::class);
     });
     
@@ -39,4 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::post('/profile/deleteFile', [ProfileController::class, 'deleteFile']);
     Route::post('/profile/details', [ProfileController::class, 'updateDetails']);
     Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto']);
+
+    Route::get('/price-lists/next-code', [PriceListController::class, 'getNextCode']);
+    Route::apiResource('/price-lists', PriceListController::class);
 });
