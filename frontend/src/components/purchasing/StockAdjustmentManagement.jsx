@@ -122,7 +122,7 @@ export default function StockAdjustmentManagement() {
 
     const handleSave = (formData, id) => {
         const request = id
-            ? axiosClient.put(`/price-lists/${id}`, formData)
+            ? axiosClient.post(`/price-lists/${id}`, formData)
             : axiosClient.post('/price-lists', formData);
 
         request.then(() => {

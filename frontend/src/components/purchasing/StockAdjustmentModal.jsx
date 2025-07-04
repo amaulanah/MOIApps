@@ -24,9 +24,17 @@ export default function StockAdjustmentModal({ item, onClose, onSave }) {
     };
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(formData, item.id);
-    };
+    e.preventDefault();
+    const payload = new FormData();
+    Object.keys(formData).forEach(key => {
+        payload.append(key, formData[key]);
+    });
+    
+    // Tambahkan baris ini jika belum ada
+    payload.append('_method', 'PUT');
+
+    onSave(payload, item.id);
+};
 
     return (
         <>
