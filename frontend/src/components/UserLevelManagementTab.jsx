@@ -10,11 +10,25 @@ export default function UserLevelManagementTab() {
     const [editingLevel, setEditingLevel] = useState(null);
     const [allPermissions, setAllPermissions] = useState([]);
 
-    useEffect(() => {
-        // Ambil semua permission saat komponen dimuat
-        axiosClient.get('/permissions').then(({ data }) => {
-            setAllPermissions(data);
+    // --- FUNGSI fetchData YANG DIPERBAIKI ---
+    const fetchData = () => {
+        setLoading(true);
+        // Ambil data user level dan semua permission secara bersamaan
+        Promise.all([
+            axiosClient.get('/user-levels'),
+            axiosClient.get('/permissions')
+        ]).then(([userLevelsResponse, permissionsResponse]) => {
+            setUserLevels(userLevelsResponse.data);
+            setAllPermissions(permissionsResponse.data);
+        }).catch(() => {
+            Swal.fire('Error', 'Gagal memuat data dari server.', 'error');
+        }).finally(() => {
+            setLoading(false);
         });
+    };
+
+    // useEffect sekarang hanya memanggil satu fungsi
+    useEffect(() => {
         fetchData();
     }, []);
 
@@ -23,14 +37,6 @@ export default function UserLevelManagementTab() {
         else { document.body.classList.remove('modal-open'); }
         return () => { document.body.classList.remove('modal-open'); };
     }, [isModalOpen]);
-
-    const fetchData = () => {
-        setLoading(true);
-        axiosClient.get('/user-levels')
-            .then(({ data }) => setUserLevels(data))
-            .catch(() => Swal.fire('Error', 'Gagal memuat data.', 'error'))
-            .finally(() => setLoading(false));
-    };
 
     const handleOpenModal = (level = null) => {
         setEditingLevel(level);
@@ -57,7 +63,6 @@ export default function UserLevelManagementTab() {
         });
     };
 
-    // --- FUNGSI BARU UNTUK MENGHAPUS ROLE ---
     const handleDelete = (level) => {
         Swal.fire({
             title: 'Anda yakin?',
@@ -73,17 +78,15 @@ export default function UserLevelManagementTab() {
                 axiosClient.delete(`/user-levels/${level.id}`)
                     .then(() => {
                         Swal.fire('Dihapus!', 'Role telah berhasil dihapus.', 'success');
-                        fetchData(); // Muat ulang data setelah sukses
+                        fetchData();
                     })
                     .catch(error => {
-                        // Menampilkan pesan error dari backend (jika role masih dipakai)
                         const message = error.response?.data?.message || 'Gagal menghapus role.';
                         Swal.fire('Error', message, 'error');
                     });
             }
         });
     };
-    // ------------------------------------
 
     return (
         <div>
@@ -98,7 +101,7 @@ export default function UserLevelManagementTab() {
                     <tr>
                         <th>Nama Role</th>
                         <th>Hak Akses</th>
-                        <th style={{ width: '120px' }}>Aksi</th> 
+                        <th style={{ width: '120px' }}>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -116,7 +119,6 @@ export default function UserLevelManagementTab() {
                                 <button className="btn btn-sm btn-warning mr-2" onClick={() => handleOpenModal(level)}>
                                     <i className="fas fa-edit"></i>
                                 </button>
-                                {/* Tombol Hapus hanya muncul jika bukan role 'admin' */}
                                 {level.user_level !== 'admin' && (
                                     <button className="btn btn-sm btn-danger" onClick={() => handleDelete(level)}>
                                         <i className="fas fa-trash"></i>
