@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\UserLevelController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\PriceListController;
+use App\Http\Controllers\Api\StockAdjustmentController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -45,5 +47,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/price-lists/next-code', [PriceListController::class, 'getNextCode']);
     Route::apiResource('/price-lists', PriceListController::class);
 
-    Route::put('/stock-adjustments/{priceList}', [PriceListController::class, 'updateStock']);
+    Route::put('/stock-adjustments/{id}', [StockAdjustmentController::class, 'update']);
 });

@@ -34,7 +34,6 @@ export default function PriceListModal({ item, onClose, onSave }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Hapus kode_supplier dari data yang dikirim karena backend akan mengabaikannya
         // eslint-disable-next-line no-unused-vars
         const { kode_supplier, ...dataToSave } = formData;
         onSave(dataToSave, item.id);
