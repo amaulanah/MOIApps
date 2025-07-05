@@ -10,7 +10,7 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\PriceListController;
 use App\Http\Controllers\Api\StockAdjustmentController;
 use App\Http\Controllers\Api\PermissionController;
-
+use App\Http\Controllers\Api\CustomerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('/user-levels', UserLevelController::class);
         Route::get('/suppliers/next-code', [SupplierController::class, 'getNextCode']);
         Route::apiResource('/suppliers', SupplierController::class);
+
+        Route::get('/customers/next-code', [CustomerController::class, 'getNextCode']);
+        Route::apiResource('/customers', CustomerController::class);
     });
     
     // ==========================================================

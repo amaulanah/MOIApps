@@ -26,7 +26,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         // PERUBAHAN: Selalu load semua relasi penting saat login
-        $user->load(['level', 'profile', 'documents']);
+        $user->load(['level.permissions', 'profile', 'documents']);
 
         return response()->json([
             'message'      => 'Login berhasil',

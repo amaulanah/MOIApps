@@ -30,7 +30,6 @@ import BalanceStockPage from "../pages/inventory/BalanceStockPage";
 //import halaman profile
 import ProfilePage from "../pages/profile/ProfilePage";
 
-
 const router = createBrowserRouter([
   {
     path: '/',
@@ -72,6 +71,10 @@ const router = createBrowserRouter([
       {
         path: '/stock-adjustment',
         element: <StockAdjustmentPage />
+      },
+      {
+        path: '/customers',
+        element: <CustomersPage />
       },
     ]
   },

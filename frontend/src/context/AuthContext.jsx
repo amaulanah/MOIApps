@@ -6,6 +6,7 @@ const StateContext = createContext({
   token: null,
   setCurrentUser: () => {},
   setToken: () => {},
+  userCan: () => false,
 });
 
 // Buat Provider
@@ -28,16 +29,24 @@ export const AuthProvider = ({ children }) => {
   }
 
   const userCan = (permissionSlug) => {
-        if (!user || !user.level || !user.level.permissions) {
-            return false;
-        }
-        // User admin selalu bisa mengakses semuanya
-        if (user.level.user_level === 'admin') {
-            return true;
-        }
-        // Cek apakah slug permission ada di dalam daftar izin user
-        return user.level.permissions.some(p => p.slug === permissionSlug);
-    };
+    // Jika data user belum ada, kembalikan false
+    if (!user || !user.level) {
+        return false;
+    }
+
+    // JIKA USER ADALAH ADMIN, SELALU BERIKAN AKSES (return true)
+    if (user.level.user_level === 'admin') {
+        return true;
+    }
+    
+    // Untuk role lain, cek apakah 'permissions' ada dan tidak kosong
+    if (!user.level.permissions || user.level.permissions.length === 0) {
+        return false;
+    }
+
+    // Cek apakah slug permission ada di dalam daftar izin user
+    return user.level.permissions.some(p => p.slug === permissionSlug);
+  };
 
   return (
     <StateContext.Provider value={{
@@ -53,4 +62,5 @@ export const AuthProvider = ({ children }) => {
 };
 
 // Custom hook untuk mempermudah penggunaan context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(StateContext);
